@@ -5,9 +5,11 @@
 #include "AbstractExecution/RelExeState.h"
 #include "AbstractExecution/RelationSolver.h"
 #include "SVF-LLVM/LLVMUtil.h"
-#include "Util/Z3Expr.h"
 #include "Util/Options.h"
+#include "Util/Z3Expr.h"
 #include <chrono>
+#include <cmath>
+#include <string>
 
 using namespace SVF;
 using namespace SVFUtil;
@@ -598,10 +600,93 @@ int main(int argc, char** argv)
     moduleNameVec = OptionBase::parseOptions(
                         argc, argv, "Source-Sink Bug Detector", "[options] <input-bitcode...>"
                     );
-    if (SYMABS())
+    // if (SYMABS())
+    // {
+    //     SymblicAbstractionTest saTest;
+    //     saTest.testsValidation();
+    // }
+
+
+    z3::context& c = Z3Expr::getContext();
+    z3::set_param("pp.decimal", true); // set decimal notation
+    z3::set_param("pp.decimal-precision", 2); // increase number of decimal places to 50.
+    // z3::set_param("pp.fp_real_literals", true);
+    typedef  z3::expr expr;
+    expr x = c.real_const("x");
+    // expr x = c.fpa_const<32>("x");
+    // expr x = c.fpa_const("x", 8, 24);
+    // expr constraint = x <= c.fpa_val((float)0.5);
+
+    // expr y = c.real_const("y");
+    expr constraint = x >= c.real_val("0.511");
+
+    // expr z = c.real_const("z");
+    float lbx = 0, upx = 1, ret = 1;
+    z3::solver s = Z3Expr::getSolver();
+    s.add(constraint);
+    // double lby = 0, upy = 1;
+    while (lbx <= upx)
     {
-        SymblicAbstractionTest saTest;
-        saTest.testsValidation();
+
+        float mid = (upx - lbx) / 2;
+        std::cout << "mid: " << mid << "\n";
+        s.push();
+        s.add(c.real_val(std::to_string(mid).c_str()) <= x);
+        s.add(x <= c.real_val(std::to_string(upx).c_str()));
+        // s.add(x*x + y*y == 1);                     // x^2 + y^2 == 1
+        // s.add(x*x*x + z*z*z < c.real_val("1/2"));  // x^3 + z^3 < 1/2
+        // s.add(y == x / 2);
+        // s.add(z == 0.1);
+        // s.add(z != 0);
+        // s.add(x > 0 && x < 1);
+        // std::cout << s << "\n\n";
+        float fmax = std::numeric_limits<float>::max(), fmin = std::numeric_limits<float>::min();
+        outs() << -(fmax+1) << " " << -fmin << "\n";
+        if (s.check() == z3::sat)
+        {
+            z3::model m = s.get_model();
+            z3::expr mm = m.eval(x);
+            // z3::set_param("pp.decimal-precision", 50); // increase number of decimal places to 50.
+
+            std::cout << "SAT " << mm << "\n";
+            std::cout << "SAT " << mm.get_decimal_string(32) << "\n";
+            float res = std::stof(mm.to_string());
+            res += 1.0;
+            std::cout << "SAT " << res << "\n";
+            // Z3_string mmm= Z3_get_numeral_string(c, mm);
+            // Z3_string mmm= Z3_get_numeral_string(c, mm);
+
+            // if (mm.is_real())
+            // {
+            //
+            //     // Z3_get_numeral_string
+            //     std::cout << "T " << mmm << "\n";
+            // }
+            ret = mm;
+            std::cout << "ret " << ret << "\n";
+            lbx = ret + 0.1;
+            break;
+        } else
+        {
+            std::cout << s << "\n\n";
+            upx = mid - 0.1;
+        }
+        s.pop();
     }
+
+
+    std::cout << "res: "<< ret << "\n";
+
+
+    // std::cout << s.check() << "\n";
+    // z3::model m = s.get_model();
+    // // std::cout << m << "\n";
+    // z3::set_param("pp.decimal", true); // set decimal notation
+    // // std::cout << "model in decimal notation\n";
+    // // std::cout << m << "\n";
+    // z3::set_param("pp.decimal-precision", 50); // increase number of decimal places to 50.
+    // // std::cout << "model using 50 decimal places\n";
+    // std::cout << m << "\n";
+    z3::set_param("pp.decimal", false); // disable decimal notation
     return 0;
 }
