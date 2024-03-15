@@ -598,6 +598,39 @@ public:
         assert(IntervalESBase::eqVarToValMap(resBS.getVarToVal(), intendedRes) && "inconsistency occurs");
     }
 
+    void testRelExeStateReal_1()
+    {
+        outs() << sucMsg("\t SUCCESS :") << "test1_1 start\n";
+        IntervalESBase itv;
+        RelExeState relation;
+        // var0 := [0, 1];
+        itv[0] = IntervalValue((double)0, 0.1);
+        relation[0] = getContext().real_const("0");
+        // var1 := var0 + 1;
+        relation[1] =
+            getContext().real_const("1") == getContext().real_const("0") + 1;
+        itv[1] = itv[0] + IntervalValue(1);
+        // Test extract sub vars
+        Set<u32_t> res;
+        relation.extractSubVars(relation[1], res);
+        assert(res == Set<u32_t>({0, 1}) && "inconsistency occurs");
+        IntervalESBase inv = itv.sliceState(res);
+        RelationSolver rs;
+        const Z3Expr& relExpr = relation[1];
+        const Z3Expr& initExpr = rs.gamma_hat(inv);
+        const Z3Expr& phi = (relExpr && initExpr).simplify();
+        // IntervalESBase resRSY = rs.RSY(inv, phi);
+        // IntervalESBase resBilateral = rs.bilateral(inv, phi);
+        IntervalESBase resBS = rs.BS_double(inv, phi);
+        // 0:[0,1] 1:[1,2]
+        // assert(resRSY == resBS && resBS == resBilateral && "inconsistency occurs");
+        for (auto r : resBS.getVarToVal())
+        {
+            outs() << r.first << " " << r.second << "\n";
+        }
+        IntervalESBase::VarToValMap intendedRes = {{0, IntervalValue(0, 1)}, {1, IntervalValue(1, 2)}};
+        // assert(IntervalESBase::eqVarToValMap(resBS.getVarToVal(), intendedRes) && "inconsistency occurs");
+    }
     void testsValidation()
     {
         SymblicAbstractionTest saTest;
@@ -617,6 +650,8 @@ public:
 
         outs() << "start top\n";
         saTest.testRelExeState4_1(); /// top
+
+        saTest.testRelExeStateReal_1();
     }
 };
 
