@@ -889,6 +889,26 @@ inline IntervalValue operator>>(const IntervalValue &lhs, const IntervalValue &r
     }
 }
 
+inline IntervalValue operator+=(IntervalValue& lhs, const IntervalValue& rhs) {
+    lhs = lhs + rhs;
+    return lhs + rhs;
+}
+
+inline IntervalValue operator*=(IntervalValue& lhs, const IntervalValue& rhs) {
+    lhs = lhs * rhs;
+    return lhs;
+}
+
+inline IntervalValue operator-=(IntervalValue& lhs, const IntervalValue& rhs) {
+    lhs = lhs - rhs;
+    return lhs;
+}
+
+inline IntervalValue operator/=(IntervalValue& lhs, const IntervalValue& rhs) {
+    lhs = lhs / rhs;
+    return lhs;
+}
+
 /// Bitwise AND of IntervalValues
 inline IntervalValue operator&(const IntervalValue &lhs, const IntervalValue &rhs)
 {

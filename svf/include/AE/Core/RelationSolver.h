@@ -46,6 +46,8 @@ public:
     /// Return Z3Expr according to valToValMap
     Z3Expr gamma_hat(const IntervalESBase &exeState) const;
 
+    Z3Expr gamma_hat_double(const IntervalESBase& exeState) const;
+
     /// Return Z3Expr according to another valToValMap
     Z3Expr gamma_hat(const IntervalESBase &alpha, const IntervalESBase &exeState) const;
 
@@ -63,6 +65,12 @@ public:
         return Z3Expr::getContext().int_const(std::to_string(varId).c_str());
     }
 
+    /// Return Z3 expression lazily based on SVFVar ID
+    virtual inline Z3Expr toZ3RealExpr(u32_t varId) const
+    {
+        return Z3Expr::getContext().real_const(std::to_string(varId).c_str());
+    }
+
     /* two optional solvers: RSY and bilateral */
 
     IntervalESBase bilateral(const IntervalESBase& domain, const Z3Expr &phi, u32_t descend_check = 0);
@@ -71,11 +79,17 @@ public:
 
     Map<u32_t, NumericLiteral> BoxedOptSolver(const Z3Expr& phi, Map<u32_t, NumericLiteral>& ret, Map<u32_t, NumericLiteral>& low_values, Map<u32_t, NumericLiteral>& high_values);
 
+    Map<u32_t, NumericLiteral> BoxedOptSolver_double(const Z3Expr& phi, Map<u32_t, NumericLiteral>& ret, Map<u32_t, NumericLiteral>& low_values, Map<u32_t, NumericLiteral>& high_values, s32_t precision_length);
+
     IntervalESBase BS(const IntervalESBase& domain, const Z3Expr &phi);
+
+    IntervalESBase BS_double(const IntervalESBase& domain, const Z3Expr &phi, s32_t precision_length);
 
     void updateMap(Map<u32_t, NumericLiteral>& map, u32_t key, const NumericLiteral& value);
 
     void decide_cpa_ext(const Z3Expr &phi, Map<u32_t, Z3Expr>&, Map<u32_t, NumericLiteral>&, Map<u32_t, NumericLiteral>&, Map<u32_t, NumericLiteral>&, Map<u32_t, NumericLiteral>&);
+
+    void decide_cpa_ext_double(const Z3Expr &phi, Map<u32_t, Z3Expr>&, Map<u32_t, NumericLiteral>&, Map<u32_t, NumericLiteral>&, Map<u32_t, NumericLiteral>&, Map<u32_t, NumericLiteral>&, s32_t precision_length);
 };
 }
 
