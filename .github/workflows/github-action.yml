@@ -43,13 +43,17 @@ jobs:
           sudo apt-get install cmake gcc g++ nodejs doxygen graphviz lcov libncurses5-dev libtinfo5 libzstd-dev
 
       # build-svf
-      - name: build-svf
+            - name: build-svf
+        env:
+          ACCESS_TOKEN: ${{ secrets.MYTOKEN }}
         run: |
           cd $GITHUB_WORKSPACE
           echo $(pwd)
           if [ "${{matrix.sanitizer}}" != "" ]; then export SVF_SANITIZER="${{matrix.sanitizer}}"; fi
           if [ "$RUNNER_OS" == "Linux" ] && [ "${{matrix.sanitizer}}" == "" ]; then export SVF_COVERAGE=1; fi
           git clone "https://github.com/SVF-tools/Test-Suite.git";
+          echo "ACCESS_TOKEN: $ACCESS_TOKEN"
+          git clone "https://$ACCESS_TOKEN@github.com/jiawei-95/Test-Suite-DNN.git";
           source ${{github.workspace}}/build.sh
 
       - name: ctest objtype inference
